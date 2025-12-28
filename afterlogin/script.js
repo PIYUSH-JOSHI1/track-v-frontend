@@ -862,7 +862,7 @@ function showMap(lat, lon) {
 // ============================================================================
 
 // Configuration
-const BACKEND_URL = 'https://your-render-app.onrender.com'; // Replace with your Render URL
+const BACKEND_URL = 'https://track-v-backend.onrender.com'; // Replace with your Render URL
 let isSystemActive = false;
 let emergencyMode = false;
 let trafficDataPolling = null;
@@ -1305,4 +1305,5 @@ function initializeTrafficSystem() {
         }
     });
 }
+
 
