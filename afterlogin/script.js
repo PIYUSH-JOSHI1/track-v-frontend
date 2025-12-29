@@ -862,7 +862,7 @@ function showMap(lat, lon) {
 // ============================================================================
 
 // Configuration
-const BACKEND_URL = 'https://track-v-backend.onrender.com'; // Replace with your Render URL
+const BACKEND_URL = 'https://your-render-app.onrender.com'; // Replace with your Render URL
 let isSystemActive = false;
 let emergencyMode = false;
 let trafficDataPolling = null;
@@ -923,6 +923,24 @@ class TrafficMonitorAPI {
 
     getVideoFeedURL(feedId) {
         return `${this.backendURL}/video_feed/${feedId}`;
+    }
+
+    async getVideoFeedAsImage(feedId) {
+        // Get single frame from video feed (workaround for CORS issues)
+        try {
+            const response = await fetch(`${this.backendURL}/video_feed/${feedId}`, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'image/jpeg, image/*'
+                }
+            });
+            if (response.ok) {
+                return await response.blob();
+            }
+        } catch (error) {
+            console.error(`Failed to get frame for feed ${feedId}:`, error);
+        }
+        return null;
     }
 
     async getTrafficData(feedId) {
@@ -1096,18 +1114,32 @@ function initVideoFeed(feedId) {
     const errorElement = document.getElementById(`video-error-${feedId}`);
     
     if (videoElement) {
-        videoElement.src = trafficAPI.getVideoFeedURL(feedId);
+        // Set the source to the MJPEG stream with CORS headers
+        const streamUrl = trafficAPI.getVideoFeedURL(feedId);
+        videoElement.src = streamUrl;
+        videoElement.onerror = () => handleVideoError(feedId);
+        videoElement.onload = () => {
+            if (errorElement) {
+                errorElement.style.display = 'none';
+            }
+        };
         videoElement.style.display = 'block';
-        
-        if (errorElement) {
-            errorElement.style.display = 'none';
-        }
     }
+}
+
+function retryVideoFeed(feedId) {
+    const errorElement = document.getElementById(`video-error-${feedId}`);
+    if (errorElement) {
+        errorElement.style.display = 'none';
+    }
+    initVideoFeed(feedId);
 }
 
 function handleVideoError(feedId) {
     const videoElement = document.getElementById(`video-feed-${feedId}`);
     const errorElement = document.getElementById(`video-error-${feedId}`);
+    
+    console.warn(`Video feed ${feedId} error - attempting reconnection...`);
     
     if (videoElement) {
         videoElement.style.display = 'none';
@@ -1116,6 +1148,9 @@ function handleVideoError(feedId) {
     if (errorElement) {
         errorElement.style.display = 'block';
     }
+    
+    // Retry after 5 seconds
+    setTimeout(() => retryVideoFeed(feedId), 5000);
 }
 
 function retryVideoFeed(feedId) {
@@ -1305,5 +1340,4 @@ function initializeTrafficSystem() {
         }
     });
 }
-
 
