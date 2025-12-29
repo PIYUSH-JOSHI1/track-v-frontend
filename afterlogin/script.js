@@ -121,7 +121,7 @@ const pages = {
             <div style="margin-bottom: 20px;">
                 <h3>YouTube Video Upload</h3>
                 <p style="color: #888; font-size: 12px;">Paste your YouTube video link below to stream it with traffic predictions</p>
-                <input type="text" id="youtubeUrl" placeholder="Paste YouTube URL here... https://www.youtube.com/watch?v=..." 
+                <input type="text" id="youtubeUrl" placeholder="https://youtu.be/9vPVPVKWcAk" 
                        style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;">
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
@@ -1447,4 +1447,5 @@ function initializeTrafficSystem() {
         }
     });
 }
+
 
