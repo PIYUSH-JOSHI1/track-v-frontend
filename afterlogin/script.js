@@ -117,6 +117,35 @@ const pages = {
             <span id="themeStatus">Dark Mode</span>
         </div>
         <div class="card">
+            <h2>📺 Video Sources</h2>
+            <div style="margin-bottom: 20px;">
+                <h3>YouTube Video Upload</h3>
+                <p style="color: #888; font-size: 12px;">Paste your YouTube video link below to stream it with traffic predictions</p>
+                <input type="text" id="youtubeUrl" placeholder="Paste YouTube URL here... https://www.youtube.com/watch?v=..." 
+                       style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;">
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label>Select Feed:</label>
+                        <select id="feedSelect" style="width: 100%; padding: 8px; border-radius: 4px;">
+                            <option value="0">Feed 1 (North)</option>
+                            <option value="1">Feed 2 (East)</option>
+                            <option value="2">Feed 3 (South)</option>
+                            <option value="3">Feed 4 (West)</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; align-items: flex-end;">
+                        <button class="button" onclick="loadYoutubeVideo()" style="width: 100%; background: #4CAF50; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                            🎬 Load YouTube Video
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="youtubeStatus" style="margin-top: 10px; padding: 10px; border-radius: 4px; display: none;">
+                </div>
+            </div>
+        </div>
+        <div class="card">
             <h2>Notification Settings</h2>
             <label>
                 <input type="checkbox" id="emailNotifications" checked>
@@ -1298,6 +1327,84 @@ function dismissAlert(button) {
         alertElement.remove();
     }
 }
+
+// YouTube Video Loading Function
+async function loadYoutubeVideo() {
+    const youtubeUrl = document.getElementById('youtubeUrl').value;
+    const feedId = document.getElementById('feedSelect').value;
+    const statusDiv = document.getElementById('youtubeStatus');
+    
+    // Validate input
+    if (!youtubeUrl.trim()) {
+        statusDiv.style.display = 'block';
+        statusDiv.style.backgroundColor = '#ffebee';
+        statusDiv.style.color = '#c62828';
+        statusDiv.textContent = '❌ Please paste a YouTube URL';
+        return;
+    }
+    
+    // Validate YouTube URL format
+    if (!youtubeUrl.includes('youtube.com') && !youtubeUrl.includes('youtu.be')) {
+        statusDiv.style.display = 'block';
+        statusDiv.style.backgroundColor = '#ffebee';
+        statusDiv.style.color = '#c62828';
+        statusDiv.textContent = '❌ Invalid YouTube URL. Please paste a valid YouTube link.';
+        return;
+    }
+    
+    // Show loading status
+    statusDiv.style.display = 'block';
+    statusDiv.style.backgroundColor = '#e3f2fd';
+    statusDiv.style.color = '#1565c0';
+    statusDiv.textContent = '⏳ Loading YouTube video... This may take 10-15 seconds...';
+    
+    try {
+        const response = await fetch(`${BACKEND_URL}/set_youtube_feed`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                feed_id: parseInt(feedId),
+                url: youtubeUrl
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Server error: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        // Success
+        statusDiv.style.display = 'block';
+        statusDiv.style.backgroundColor = '#e8f5e9';
+        statusDiv.style.color = '#2e7d32';
+        statusDiv.textContent = `✅ YouTube video loaded successfully for Feed ${parseInt(feedId) + 1}!`;
+        
+        // Clear input
+        document.getElementById('youtubeUrl').value = '';
+        
+        console.log('YouTube video loaded:', result);
+        
+    } catch (error) {
+        statusDiv.style.display = 'block';
+        statusDiv.style.backgroundColor = '#ffebee';
+        statusDiv.style.color = '#c62828';
+        statusDiv.textContent = `❌ Error: ${error.message}. Please try again.`;
+        console.error('YouTube load error:', error);
+    }
+}
+
+// Allow Enter key to trigger video load
+document.addEventListener('DOMContentLoaded', function() {
+    const youtubeInput = document.getElementById('youtubeUrl');
+    if (youtubeInput) {
+        youtubeInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                loadYoutubeVideo();
+            }
+        });
+    }
+});
 
 // Emergency button handler
 document.addEventListener('DOMContentLoaded', function() {
